@@ -77,24 +77,28 @@ app.get('/api/submissions', async (req, res) => {
   }
 });
 
-// Submit form with image
 app.post('/api/submit', upload.single('image'), async (req, res) => {
   try {
     const { name, email, message } = req.body;
+    
+    // Si req.file existe, on prend le chemin, sinon on met null
     const image = req.file ? `uploads/${req.file.filename}` : null;
 
+    // 1. Validation des textes uniquement
     if (!name || !email || !message) {
-      return res.status(400).json({ error: 'All fields are required' });
+      return res.status(400).json({ error: 'Name, email and message are required' });
     }
 
-    if (!image) {
+    // 2. SUPPRIMEZ OU COMMENTEZ CE BLOC :
+    /* if (!image) {
       return res.status(400).json({ error: 'Image is required' });
-    }
+    } 
+    */
 
     const connection = await pool.getConnection();
     await connection.execute(
       'INSERT INTO submissions (name, email, message, image) VALUES (?, ?, ?, ?)',
-      [name, email, message, image]
+      [name, email, message, image] // 'image' sera null si aucun fichier n'est envoyé
     );
     connection.release();
 
