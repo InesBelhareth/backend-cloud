@@ -4,7 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const mysql = require('mysql2/promise');
+// const mysql = require('mysql2/promise'); // 🔴 Commenté pour test sans DB
 
 const app = express();
 
@@ -16,15 +16,16 @@ app.use(express.static('uploads'));
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/')
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname))
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
 
 const upload = multer({ storage: storage });
 
+/* 🔴 Commenté MySQL connection et initialization
 // MySQL Connection Pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -40,8 +41,6 @@ const pool = mysql.createPool({
 const initializeDatabase = async () => {
   try {
     const connection = await pool.getConnection();
-    
-    // Create table if it doesn't exist
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS submissions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,25 +51,34 @@ const initializeDatabase = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    
     connection.release();
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
   }
 };
+*/
 
 // Routes
 
 // Get all submissions
 app.get('/api/submissions', async (req, res) => {
   try {
+    // 🔴 Simule des données factices
+    const submissions = [
+      { id: 1, name: 'Alice', email: 'alice@example.com', message: 'Hello', image: null },
+      { id: 2, name: 'Bob', email: 'bob@example.com', message: 'Test', image: null }
+    ];
+    res.json(submissions);
+
+    /* 🔴 Version réelle à décommenter plus tard
     const connection = await pool.getConnection();
     const [submissions] = await connection.execute(
       'SELECT * FROM submissions ORDER BY created_at DESC'
     );
     connection.release();
     res.json(submissions);
+    */
   } catch (error) {
     console.error('Error fetching submissions:', error);
     res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -80,29 +88,25 @@ app.get('/api/submissions', async (req, res) => {
 app.post('/api/submit', upload.single('image'), async (req, res) => {
   try {
     const { name, email, message } = req.body;
-    
-    // Si req.file existe, on prend le chemin, sinon on met null
     const image = req.file ? `uploads/${req.file.filename}` : null;
 
-    // 1. Validation des textes uniquement
     if (!name || !email || !message) {
       return res.status(400).json({ error: 'Name, email and message are required' });
     }
 
-    // 2. SUPPRIMEZ OU COMMENTEZ CE BLOC :
-    /* if (!image) {
-      return res.status(400).json({ error: 'Image is required' });
-    } 
-    */
+    // 🔴 Simule l’insertion sans DB
+    console.log('Form received:', { name, email, message, image });
+    res.json({ message: 'Submission received successfully', data: { name, email, message, image } });
 
+    /* 🔴 Version réelle à décommenter plus tard
     const connection = await pool.getConnection();
     await connection.execute(
       'INSERT INTO submissions (name, email, message, image) VALUES (?, ?, ?, ?)',
-      [name, email, message, image] // 'image' sera null si aucun fichier n'est envoyé
+      [name, email, message, image]
     );
     connection.release();
-
     res.json({ message: 'Submission received successfully' });
+    */
   } catch (error) {
     console.error('Error submitting form:', error);
     res.status(500).json({ error: 'Failed to submit form' });
@@ -113,8 +117,12 @@ app.post('/api/submit', upload.single('image'), async (req, res) => {
 app.delete('/api/submissions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Get the image path first
+
+    // 🔴 Simule suppression sans DB
+    console.log('Deleting submission id:', id);
+    res.json({ message: `Submission ${id} deleted (mock)` });
+
+    /* 🔴 Version réelle à décommenter plus tard
     const connection = await pool.getConnection();
     const [result] = await connection.execute(
       'SELECT image FROM submissions WHERE id = ?',
@@ -130,17 +138,16 @@ app.delete('/api/submissions/:id', async (req, res) => {
 
     await connection.execute('DELETE FROM submissions WHERE id = ?', [id]);
     connection.release();
-
     res.json({ message: 'Submission deleted successfully' });
+    */
   } catch (error) {
     console.error('Error deleting submission:', error);
     res.status(500).json({ error: 'Failed to delete submission' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-
+const PORT = process.env.PORT || 5000; // 🔴 Port backend mock
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
-  initializeDatabase();
+  console.log(`Mock backend server running on port ${PORT}`);
+  // initializeDatabase(); 🔴 Commenté pour test sans DB
 });
