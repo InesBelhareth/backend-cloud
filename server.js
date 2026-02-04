@@ -145,6 +145,10 @@ app.delete('/api/submissions/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete submission' });
   }
 });
+app.get("/", (req, res) => {
+  res.status(200).send("OK");
+});
+
 
 const PORT = process.env.PORT || 5000; // 🔴 Port backend mock
 app.listen(PORT, '0.0.0.0', () => {
