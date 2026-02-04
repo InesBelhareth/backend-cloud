@@ -11,6 +11,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('uploads'));
+app.use(cors({
+  origin: '*', // pour tester rapidement
+  methods: ['GET','POST','DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
